@@ -3,7 +3,7 @@
 
 //SerialDebugOutput debugOutput(115200, ALL_LEVEL);
 
-// #define SX1278_TX_EN
+//#define SX1278_TX_EN
 #define OLED_DISPLAY
 
 #define RESET_KEY D6 //清零键
@@ -277,7 +277,6 @@ void system_event_callback(system_event_t event, int param, uint8_t *data, uint1
                 case ep_lora_radio_tx_done:
 
                     LoRa.radioSetSleep();
-                    LedBlink();
                     txPacketCnt++;
                     if(txPacketCnt >= 65535)
                     {
@@ -292,7 +291,6 @@ void system_event_callback(system_event_t event, int param, uint8_t *data, uint1
                     break;
 
                 case ep_lora_radio_rx_done:
-                    LoRa.radioSetSleep();
                     rxPacketCnt++;
 
                     snrValue = LoRa.radioGetSnr();
@@ -335,9 +333,7 @@ void system_event_callback(system_event_t event, int param, uint8_t *data, uint1
                         lastMillis = currentTime;
                     }
 
-                    LedBlink();
                     rxDoneFlag = true;
-                    LoRa.radioStartRx(0);
                     break;
 
                 case ep_lora_radio_rx_timeout:
@@ -391,6 +387,7 @@ void UpKeyHandler(void)
             currentPacketCnt = 0;
             lastRxPackets = 0;
             rxChangeParams = true;
+            LoRa.radioSetSleep();
 #endif
 
             if(paramsIndex < LORA_PARAMS_NUMBER - 1)
@@ -447,7 +444,6 @@ void UpKeyHandler(void)
 
 void BackKeyHandler(void)
 {
-
 #ifdef SX1278_TX_EN
             txPacketCnt = 0;
 #else
@@ -457,8 +453,8 @@ void BackKeyHandler(void)
             currentPacketCnt = 0;
             lastRxPackets = 0;
             rxChangeParams = true;
+            LoRa.radioSetSleep();
 #endif
-
             if(paramsIndex > 0)
             {
                 paramsIndex--;
@@ -579,6 +575,14 @@ void KeyHandler(void)
     }
 }
 
+//不运行lorawan协议
+void init_before_setup(void)
+{
+    System.disableFeature(SYSTEM_FEATURE_LORAMAC_RUN_ENABLED);
+}
+
+STARTUP( init_before_setup() );
+
 void setup()
 {
     Cloud.setProtocol(PROTOCOL_P2P); //运行P2P透传
@@ -617,11 +621,11 @@ void setup()
 
     bufferSize = ParamsTable[paramsIndex].size;
 
-    DEBUG("rfFreq = %d\r\n",rfFreq);
-    DEBUG("spreadFactor = %d\r\n",spreadFactor);
-    DEBUG("bandwidth = %d\r\n",bandwidth);
-    DEBUG("bufferSize = %d\r\n",bufferSize);
-    DEBUG("paramsIndex= %d\r\n",paramsIndex);
+    // DEBUG("rfFreq = %d\r\n",rfFreq);
+    // DEBUG("spreadFactor = %d\r\n",spreadFactor);
+    // DEBUG("bandwidth = %d\r\n",bandwidth);
+    // DEBUG("bufferSize = %d\r\n",bufferSize);
+    // DEBUG("paramsIndex= %d\r\n",paramsIndex);
 }
 
 void loop()
@@ -631,6 +635,7 @@ void loop()
     if(txDoneFlag)
     {
         txDoneFlag = false;
+        LedBlink();
         dataBuffer[0] = txPacketCnt & 0xff;
         dataBuffer[1] = (txPacketCnt >> 8) & 0xff;
 
@@ -641,6 +646,7 @@ void loop()
     if(rxDoneFlag)
     {
         rxDoneFlag = false;
+        LedBlink();
         if(rxChangeParams)
         {
             rxChangeParams = false;

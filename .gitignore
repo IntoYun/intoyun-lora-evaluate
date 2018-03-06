@@ -1,32 +1,13 @@
-# Prerequisites
-*.d
+# Objects 文件夹
+target/obj/
+target/*.elf
+target/*.hex
+target/*.map
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# gtags相关文件
+GPATH
+GRTAGS
+GTAGS
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+# tags
+tags

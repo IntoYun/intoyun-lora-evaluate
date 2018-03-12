@@ -1,8 +1,15 @@
-# Objects 文件夹
-target/obj/
-target/*.elf
-target/*.hex
-target/*.map
+# 平台相关隐藏文件
+.settings/*
+.cproject
+.project
+.DS_Store
+
+#项目临时工程
+target/
+size
+.intoiotenvs
+.intoiotlibdeps
+release/package
 
 # gtags相关文件
 GPATH
@@ -11,3 +18,4 @@ GTAGS
 
 # tags
 tags
+

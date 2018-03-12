@@ -1,0 +1,37 @@
+#######################################
+# Syntax Coloring Map For IntoRobot
+#######################################
+
+#######################################
+# Class (KEYWORD1)
+#######################################
+
+Adafruit_SSD1306   KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+# methods names in commond
+begin   KEYWORD2
+ssd1306_command  KEYWORD2
+ssd1306_data  KEYWORD2
+clearDisplay  KEYWORD2
+invertDisplay  KEYWORD2
+display  KEYWORD2
+startscrollright  KEYWORD2
+startscrollleft  KEYWORD2
+startscrolldiagright  KEYWORD2
+startscrolldiagleft  KEYWORD2
+stopscroll  KEYWORD2
+dim  KEYWORD2
+drawPixel  KEYWORD2
+drawFastVLine  KEYWORD2
+drawFastHLine  KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+SSD1306_I2C_ADDRESS  LITERAL1
+BLACK  LITERAL1
+WHITE  LITERAL1

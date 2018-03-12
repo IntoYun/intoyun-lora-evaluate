@@ -1,0 +1,24 @@
+{
+  "authors": [ {
+    "email": "robin@molmc.com",
+    "maintainer": false,
+    "name": "robin",
+    "url": ""
+  } ],
+  "description": "SSD1306",
+  "export": {
+    "exclude": [ "extras", "docs", "tests", "test", "*.doxyfile", "*.pdf" ],
+    "include": ""
+  },
+  "frameworks": [ "arduino" ],
+  "homepage": "",
+  "id": 69,
+  "keywords": [ "oled", "ssd1306" ],
+  "name": "Adafruit_SSD1306",
+  "platforms": [ "atmelavr", "atmelsam", "espressif8266", "espressif32", "intel_arc32", "microchippic32", "nordicnrf51", "nordicnrf52", "teensy", "timsp430", "ststm32" ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intoyuniot/Adafruit_SSD1306.git"
+  },
+  "version": "1.0.1"
+}

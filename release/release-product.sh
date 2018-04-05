@@ -38,8 +38,8 @@ release_product() {
         intoyuniot run -d .. -e intoyun-lora-evaluate-rx
         intoyuniot run -d .. -e intoyun-lora-evaluate-tx
 
-        cp ../.intoiotenvs/intoyun-lora-evaluate-rx/firmware.bin $RELEASE_PRODUCT_VERSION_DIR/intoyun-lora-evaluate-rx.bin
-        cp ../.intoiotenvs/intoyun-lora-evaluate-tx/firmware.bin $RELEASE_PRODUCT_VERSION_DIR/intoyun-lora-evaluate-tx.bin
+        cp ../.intoiotenvs/intoyun-lora-evaluate-rx/firmware.bin $RELEASE_PRODUCT_VERSION_DIR/firmware-rx.bin
+        cp ../.intoiotenvs/intoyun-lora-evaluate-tx/firmware.bin $RELEASE_PRODUCT_VERSION_DIR/firmware-tx.bin
 
         cp -rf $RELEASE_COMMON_DIR/tools/stlink $RELEASE_PRODUCT_VERSION_DIR/tools
         cp -rf $RELEASE_COMMON_DIR/tools/upload-reset $RELEASE_PRODUCT_VERSION_DIR/tools

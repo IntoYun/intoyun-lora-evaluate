@@ -1,4 +1,4 @@
 #!/bin/bash
 
 export DYLD_LIBRARY_PATH="`dirname "$0"`/lib"
-exec -a "$0" "`dirname "$0"`/bin/st-flash" "$@"
+exec -a "$0" "`dirname "$0"`/bin/st-info" "$@"

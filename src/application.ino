@@ -2,6 +2,7 @@
 #include "Adafruit_SSD1306.h"
 
 //SerialDebugOutput debugOutput(115200, ALL_LEVEL);
+PRODUCT_SOFTWARE_VERSION(1.1.0)
 
 //#define SX1278_TX_EN
 #define OLED_DISPLAY
@@ -580,6 +581,7 @@ void KeyHandler(void)
 void init_before_setup(void)
 {
     System.disableFeature(SYSTEM_FEATURE_LORAMAC_RUN_ENABLED);
+    System.disableFeature(SYSTEM_FEATURE_CONFIG_SAVE_ENABLED); //设备模式不保存
 }
 
 STARTUP( init_before_setup() );

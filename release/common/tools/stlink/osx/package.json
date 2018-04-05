@@ -1,0 +1,7 @@
+{
+    "description": "ST-Link",
+    "name": "tool-stlink",
+    "system": "darwin_x86_64",
+    "url": "https://github.com/texane/stlink",
+    "version": "1.10301.0"
+}

@@ -6,7 +6,7 @@
 //#define SX1278_TX_EN
 #define OLED_DISPLAY
 
-#define RESET_KEY D6 //清零键
+//#define RESET_KEY D6 //清零键
 #define UP_KEY    D3 //参数改变+键
 #define BACK_KEY  D2 //参数改变-键
 
@@ -510,7 +510,8 @@ void BackKeyHandler(void)
 
 void KeyHandler(void)
 {
-    if(digitalRead(UP_KEY) == 0 || digitalRead(RESET_KEY) == 0 || digitalRead(BACK_KEY) == 0)
+    //if(digitalRead(UP_KEY) == 0 || digitalRead(RESET_KEY) == 0 || digitalRead(BACK_KEY) == 0)
+    if(digitalRead(UP_KEY) == 0 || digitalRead(BACK_KEY) == 0)
     {
         if(keyDebounceTime <= KEY_EFFECT)
         {
@@ -524,12 +525,12 @@ void KeyHandler(void)
                     {
                         upKeyValid = true;
                     }
-
+/*
                     if(digitalRead(RESET_KEY) == 0)
                     {
                         resetKeyValid = true;
                     }
-
+*/
                     if(digitalRead(BACK_KEY) == 0)
                     {
                         backKeyValid = true;
@@ -592,7 +593,7 @@ void setup()
     LoRa.radioSetBandwidth(BW125);
     LoRa.radioSetSF(12);
     pinMode(UP_KEY,INPUT_PULLUP);
-    pinMode(RESET_KEY,INPUT_PULLUP);
+    //pinMode(RESET_KEY,INPUT_PULLUP);
     pinMode(BACK_KEY,INPUT_PULLUP);
     RGB.control(true);
     RGB.color(0x0000ff);

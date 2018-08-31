@@ -1,56 +1,56 @@
 //lora 性能测试
 #include "Adafruit_SSD1306.h"
 
-//SerialDebugOutput debugOutput(115200, ALL_LEVEL);
-PRODUCT_SOFTWARE_VERSION(1.1.0)
+PRODUCT_SOFTWARE_VERSION(1.2.0)
 
 //#define SX1278_TX_EN
 #define OLED_DISPLAY
 
-#define UP_KEY    D3 //参数改变+键
-#define BACK_KEY  D2 //参数改变-键
+#define DR_UP_KEY                       D3 //速率选择+键
+#define DR_BACK_KEY                     D2 //速率选择-键
+#define FEQ_UP_KEY                      A1 //频率选择+键
+#define FEQ_BACK_KEY                    A0 //频率选择-键
 
-#define KEY_EFFECT          100
-#define OLED_RESET          A3
-#define BUFFER_SIZE         250 // Define the payload size here
-#define LORA_PARAMS_NUMBER  28
+#define KEY_EFFECT                      100
+#define OLED_RESET                      A3
+#define BUFFER_SIZE                     250 // Define the payload size here
+#define LORA_PARAMS_NUMBER              28
 
 #define BW125    0
 #define BW250    1
 #define BW500    2
 #define BW62_5   3
 
-#define RF_FREQ    434575000
-
-bool upKeyValid = false; //按键有效
 bool resetKeyValid = false;
+bool upKeyValid = false; //按键有效
 bool backKeyValid = false;
+bool feqUpKeyValid = false; //按键有效
+bool feqBackKeyValid = false;
 static uint8_t bufferSize = BUFFER_SIZE;
 static bool ledFlag = false;
 int8_t rssiValue = 0;
 int8_t snrValue = 0;
-uint32_t rfFreq = 0;      //频率
-uint8_t spreadFactor = 0; //扩频因子
-uint16_t bandwidth = 0;   //带宽
-uint32_t rxPacketCnt = 0;    //接收到的包数量
+uint32_t rfFreq = 0;        //频率
+uint8_t spreadFactor = 0;   //扩频因子
+uint16_t bandwidth = 0;     //带宽
+uint32_t rxPacketCnt = 0;   //接收到的包数量
 uint16_t txPacketCnt = 0;   //发送的包数量
 uint16_t missPacketCnt = 0; //丢失的包数量
-float per = 0;            //丢包率%
-uint16_t dataRate = 0;    //速率
-uint8_t paramsIndex = 0;  //查表用
-uint32_t currentTime = 0; //记录当前ms计数值
+float per = 0;              //丢包率%
+uint16_t dataRate = 0;      //速率
+uint8_t paramsIndex = 0;    //查表用
+uint32_t currentTime = 0;   //记录当前ms计数值
 
-uint16_t keyDebounceTime; //按键抖动时间
+uint16_t keyDebounceTime;   //按键抖动时间
 bool keyRelease = false;
 static bool txDoneFlag = true;
 static bool rxDoneFlag = false;
-uint16_t lastPacketCnt = 0; //上一次包序号
+uint16_t lastPacketCnt = 0;    //上一次包序号
 uint16_t currentPacketCnt = 0; //当前包序号
-uint16_t realDataRate = 0; //计算实际速率
-uint32_t lastRxPackets = 0; //记录上一次接收到的数据包数量
-uint32_t lastMillis = 0; //上一次ms计数值
+uint16_t realDataRate = 0;     //计算实际速率
+uint32_t lastRxPackets = 0;    //记录上一次接收到的数据包数量
+uint32_t lastMillis = 0;       //上一次ms计数值
 static bool rxChangeParams = false; //接收参数已改变
-
 
 uint8_t dataBuffer[BUFFER_SIZE] = {
     0,0,3,4,5,6,7,8,9,10,
@@ -99,6 +99,17 @@ const lora_params_t ParamsTable[] = {
     {625,6,4688,64},
 };
 
+const uint32_t g_FeqTable[] = {
+    433000000,
+    450000000,
+    470000000,
+    490000000,
+    510000000
+};
+
+uint8_t feqIndex = 0;  //查表用
+uint8_t feqMaxIndex = sizeof(g_FeqTable)/sizeof(uint32_t) - 1;
+
 Adafruit_SSD1306 display(OLED_RESET);  // Hareware I2C
 
 void getDR(void)
@@ -119,7 +130,6 @@ void getBW(void)
         case 0:
             bandwidth = 125;
             break;
-
         case 1:
             bandwidth = 250;
             break;
@@ -134,16 +144,15 @@ void getBW(void)
     }
 }
 
-
 void OLEDDisplay(const char *result)
 {
     display.clearDisplay();
     display.setCursor(0,0);
     display.println(result);
 
-    __disable_irq( );
+    __disable_irq();
     display.display();
-    __enable_irq( );
+    __enable_irq();
 }
 
 void RFParameterDispaly(void)
@@ -157,8 +166,10 @@ void RFParameterDispaly(void)
     p = p+"LoRa Rx Mode";
 #endif
 
-    p = p+ "\r\n";
-    p = p+ "\r\n";
+    sprintf(tmp,"(%d)", g_FeqTable[feqIndex]/1000);
+
+    p = p + tmp + "\r\n";
+    p = p +"\r\n";
 
     getDR();
     p = p+"DR";
@@ -460,20 +471,139 @@ void BackKeyHandler(void)
 #endif
 }
 
+void FeqUpKeyHandler(void)
+{
+#ifdef SX1278_TX_EN
+    txPacketCnt = 0;
+#else
+    rxPacketCnt = 0;
+    missPacketCnt = 0;
+    lastPacketCnt = 0;
+    currentPacketCnt = 0;
+    lastRxPackets = 0;
+    rxChangeParams = true;
+    LoRa.radioSetSleep();
+#endif
+
+    if(feqIndex < feqMaxIndex) {
+        feqIndex++;
+    } else {
+        feqIndex = 0;
+    }
+    LoRa.radioSetFreq(g_FeqTable[feqIndex]);
+
+    if(ParamsTable[paramsIndex].bw == 625) {
+        LoRa.radioSetBandwidth(BW62_5);
+        bandwidth = 625;
+    } else if(ParamsTable[paramsIndex].bw == 125) {
+        LoRa.radioSetBandwidth(BW125);
+        bandwidth = 125;
+    } else if(ParamsTable[paramsIndex].bw == 250) {
+        LoRa.radioSetBandwidth(BW250);
+        bandwidth = 250;
+    } else if(ParamsTable[paramsIndex].bw == 500) {
+        LoRa.radioSetBandwidth(BW500);
+        bandwidth = 500;
+    }
+    spreadFactor = ParamsTable[paramsIndex].sf;
+    LoRa.radioSetSF(spreadFactor);
+    bufferSize = ParamsTable[paramsIndex].size;
+    if(spreadFactor == 6) {
+        LoRa.radioSetFixLenOn(true);
+        LoRa.radioSetFixPayloadLen(bufferSize);
+    } else {
+        LoRa.radioSetFixLenOn(false);
+        LoRa.radioSetFixPayloadLen(0);
+    }
+    RFParameterDispaly();
+
+#ifndef SX1278_TX_EN
+    LoRa.radioStartRx(0);
+#endif
+}
+
+void FeqBackKeyHandler(void)
+{
+#ifdef SX1278_TX_EN
+    txPacketCnt = 0;
+#else
+    rxPacketCnt = 0;
+    missPacketCnt = 0;
+    lastPacketCnt = 0;
+    currentPacketCnt = 0;
+    lastRxPackets = 0;
+    rxChangeParams = true;
+    LoRa.radioSetSleep();
+#endif
+
+    if(feqIndex > 0) {
+        feqIndex--;
+    } else {
+        feqIndex = feqMaxIndex;
+    }
+    LoRa.radioSetFreq(g_FeqTable[feqIndex]);
+
+    if(ParamsTable[paramsIndex].bw == 625) {
+        LoRa.radioSetBandwidth(BW62_5);
+        bandwidth = 625;
+    } else if(ParamsTable[paramsIndex].bw == 125) {
+        LoRa.radioSetBandwidth(BW125);
+        bandwidth = 125;
+    } else if(ParamsTable[paramsIndex].bw == 250) {
+        LoRa.radioSetBandwidth(BW250);
+        bandwidth = 250;
+    } else if(ParamsTable[paramsIndex].bw == 500) {
+        LoRa.radioSetBandwidth(BW500);
+        bandwidth = 500;
+    }
+    spreadFactor = ParamsTable[paramsIndex].sf;
+    LoRa.radioSetSF(spreadFactor);
+    bufferSize = ParamsTable[paramsIndex].size;
+    if(spreadFactor == 6) {
+        LoRa.radioSetFixLenOn(true);
+        LoRa.radioSetFixPayloadLen(bufferSize);
+    } else {
+        LoRa.radioSetFixLenOn(false);
+        LoRa.radioSetFixPayloadLen(0);
+    }
+
+    RFParameterDispaly();
+
+#ifndef SX1278_TX_EN
+    LoRa.radioStartRx(0);
+#endif
+}
+
 void KeyHandler(void)
 {
-    if(digitalRead(UP_KEY) == 0 || digitalRead(BACK_KEY) == 0) {
+    if(digitalRead(DR_UP_KEY) == 0 || digitalRead(DR_BACK_KEY) == 0) {
         if(keyDebounceTime <= KEY_EFFECT) {
             keyDebounceTime++;
             if(keyDebounceTime == KEY_EFFECT) {
                 if(!keyRelease) {
                     keyRelease = true;
-                    if(digitalRead(UP_KEY) == 0) {
+                    if(digitalRead(DR_UP_KEY) == 0) {
                         upKeyValid = true;
                     }
 
-                    if(digitalRead(BACK_KEY) == 0) {
+                    if(digitalRead(DR_BACK_KEY) == 0) {
                         backKeyValid = true;
+                    }
+                }
+            }
+        }
+    } else if(digitalRead(FEQ_UP_KEY) == 0 || digitalRead(FEQ_BACK_KEY) == 0) {
+        if(keyDebounceTime <= KEY_EFFECT) {
+            keyDebounceTime++;
+            if(keyDebounceTime == KEY_EFFECT) {
+                if(!keyRelease) {
+                    keyRelease = true;
+                    if(digitalRead(FEQ_UP_KEY) == 0) {
+                        feqUpKeyValid = true;
+                    }
+
+                    if(digitalRead(FEQ_BACK_KEY) == 0) {
+                        feqBackKeyValid = true;
                     }
                 }
             }
@@ -490,15 +620,26 @@ void KeyHandler(void)
                         UpKeyHandler();
                     }
 
+                    if(backKeyValid) {
+                        backKeyValid = false;
+                        BackKeyHandler();
+                    }
+
+                    if(feqUpKeyValid) {
+                        feqUpKeyValid = false;
+                        FeqUpKeyHandler();
+                    }
+
+                    if(feqBackKeyValid) {
+                        feqBackKeyValid = false;
+                        FeqBackKeyHandler();
+                    }
+
                     if(resetKeyValid) {
                         resetKeyValid = false;
                         ResetKeyHandler();
                     }
 
-                    if(backKeyValid) {
-                        backKeyValid = false;
-                        BackKeyHandler();
-                    }
                     keyRelease = false;
                 }
             }
@@ -518,12 +659,14 @@ void setup()
 {
     Cloud.setProtocol(PROTOCOL_P2P);              //运行P2P透传
     System.on(event_lora_radio_status, &system_event_callback);
-    LoRa.radioSetFreq(RF_FREQ);
+    LoRa.radioSetFreq(g_FeqTable[feqIndex]);
     LoRa.radioSetMaxPayloadLength(BUFFER_SIZE);
     LoRa.radioSetBandwidth(BW125);
     LoRa.radioSetSF(12);
-    pinMode(UP_KEY,INPUT_PULLUP);
-    pinMode(BACK_KEY,INPUT_PULLUP);
+    pinMode(DR_UP_KEY,INPUT_PULLUP);
+    pinMode(DR_BACK_KEY,INPUT_PULLUP);
+    pinMode(FEQ_UP_KEY,INPUT_PULLUP);
+    pinMode(FEQ_BACK_KEY,INPUT_PULLUP);
     RGB.control(true);
     RGB.color(0x0000ff);
     Wire.setSpeed(CLOCK_SPEED_400KHZ);

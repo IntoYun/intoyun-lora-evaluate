@@ -33,7 +33,7 @@ case $type in
         ./release-package.sh
         ;;
     3 ) # 进入平台 var/www/downloads/terminal/modules/package
-        ssh prod-yun
+        ssh prd-iy-vpc2
         ;;
     * )
         exit 0

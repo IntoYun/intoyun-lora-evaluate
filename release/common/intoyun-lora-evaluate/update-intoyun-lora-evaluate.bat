@@ -60,7 +60,7 @@ copy %file_bin% %file_dfu% >nul 2>nul
 "%DFUSUFFIX_TOOL%" -v 0483 -p df11 -a %file_dfu% >nul 2>nul
 set /p=下载应用程序   ... <nul
 "%UPLOAD_RESET_TOOL%" -p %UPLOAD_PORT% -b 19200 -t 2000 >nul 2>nul
-"%DFU_TOOL%" -d 0x0483:0xdf11 -a 0 -R -s 0x08006000:leave -D %file_dfu% >nul 2>nul
+"%DFU_TOOL%" -d 0x0483:0xdf11 -a 0 -R -s 0x08006000:leave -D %file_dfu%
 if %errorlevel%==0 (
 echo 成功
 ) else (
@@ -71,7 +71,7 @@ goto update_end
 :all_update_start
 
 set /p=下载Bootloader ... <nul
-"%ST_TOOL%" write boot-v1.bin 0x8000000 >nul 2>nul
+"%ST_TOOL%" write boot-v2.bin 0x8000000
 if %errorlevel%==0 (
 echo 成功
 ) else (
@@ -82,7 +82,7 @@ goto update_end
 set /p=下载应用程序   ... <nul
 :: 延时1s
 choice /t 1 /d y /n >nul
-"%ST_TOOL%" --reset write %file_bin% 0x08006000 >nul 2>nul
+"%ST_TOOL%" --reset write %file_bin% 0x08006000
 if %errorlevel%==0 (
 echo 成功
 ) else (

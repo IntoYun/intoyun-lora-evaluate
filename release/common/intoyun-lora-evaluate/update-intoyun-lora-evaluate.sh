@@ -81,7 +81,7 @@ case "$select_type" in
         $DFUSUFFIX_TOOL -v 0483 -p df11 -a $file_dfu &>/dev/null
         cecho "下载应用程序 ... \c" $green
         $UPLOAD_RESET_TOOL -p $UPLOAD_PORT -b 19200 -t 2000 &>/dev/null
-        $SUDO $DFU_TOOL -d 0x0483:0xdf11 -a 0 -R -s 0x08006000:leave -D $file_dfu &>/dev/null
+        $SUDO $DFU_TOOL -d 0x0483:0xdf11 -a 0 -R -s 0x08006000:leave -D $file_dfu
         if [ $? = 0 ]; then
             result=0
             cecho "成功" $yellow
@@ -93,12 +93,12 @@ case "$select_type" in
 
     2)
         cecho "下载bootloader ... \c" $green
-        $SUDO $ST_TOOL write boot-v1.bin 0x8000000 &>/dev/null
+        $SUDO $ST_TOOL write boot-v2.bin 0x8000000
         if [ $? = 0 ]; then
             cecho "成功" $yellow
             sleep 1
             cecho "下载应用程序   ... \c" $green
-            $SUDO $ST_TOOL --reset write $file_bin 0x08006000 &>/dev/null
+            $SUDO $ST_TOOL --reset write $file_bin 0x08006000
             if [ $? = 0 ]; then
                 result=0
                 cecho "成功" $yellow
